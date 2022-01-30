@@ -41,10 +41,14 @@ ORDER BY
 
 -- 4. What is the number of events for each event type?
 SELECT 
-	event_type
-	--COUNT(DISTINCT )
+	event_type,
+	COUNT(event_type) no_event
 FROM 
 	events
+GROUP BY
+	event_type
+ORDER BY
+	1;
 
 -- 5. What is the percentage of visits which have a purchase event?
 DECLARE @total_visit INT, @purchase_event INT;
@@ -124,35 +128,36 @@ GROUP BY
 ORDER BY
 	times_purchase DESC
 
+-----------------------------
+-- Product Funnel Analysis --
+-----------------------------
+
+--Using a single SQL query - create a new output table which has the following details:
+
+--How many times was each product viewed?
+--How many times was each product added to cart?
+--How many times was each product added to a cart but not purchased (abandoned)?
+--How many times was each product purchased?
+
+SELECT * FROM event_identifier
+
+SELECT  
+	visit_id,
+	e.page_id,
+	event_type
+FROM
+	events e 
+	LEFT JOIN
+	page_hierarchy ph
+	ON
+	ph.page_id = e.page_id
+WHERE event_type NOT IN (4,5)
+ORDER BY		
+	visit_id
+
 ------------------------
 -- CAMPAIGNS ANALYSIS --
 ------------------------
-CREATE TABLE #campaign_data (campaign_id int, product_id INT, campaign_name varchar(33), start_date DATE, end_date DATE)
-GO
-DECLARE @start INT, @end INT;
-DECLARE @count INT, @max INT ;
-
-SET @count = 1;
-SET @max = (SELECT count(*) FROM campaign_identifier)
-
-WHILE @count <= @max
-BEGIN
-	SET @start = (SELECT LEFT(products,1) FROM campaign_identifier WHERE campaign_id = @count)
-	SET @end = (SELECT RIGHT(products,1) FROM campaign_identifier WHERE	campaign_id = @count)
-
-		WHILE @start <= @end
-		BEGIN
-			INSERT INTO #campaign_data
-			SELECT campaign_id,@start,campaign_name,start_date,end_date  FROM campaign_identifier WHERE	campaign_id = @count
-	
-			SET @start = @start + 1;
-	
-		END
-	SET @count = @count + 1;
-END
-GO
-SELECT * FROM #campaign_data
-----------------------------
 GO
 WITH global_cte AS (
 SELECT 
@@ -166,6 +171,7 @@ SELECT
 		THEN 1
 		ELSE 0
 	END) AS purchase,
+	(SELECT campaign_name FROM campaign_identifier WHERE MIN(event_time) BETWEEN start_date AND end_date) campaign_name,
 	(SELECT COUNT(event_type) FROM events e1 WHERE event_type = 4 AND e1.visit_id = e.visit_id) AS impression,
 	(SELECT COUNT(event_type) FROM events e1 WHERE event_type = 5 AND e1.visit_id = e.visit_id) AS click
 FROM
@@ -181,20 +187,13 @@ FROM
 GROUP BY
 	user_id,
 	visit_id
-),
-campaign_cte AS (SELECT * FROM #campaign_data)
-SELECT DISTINCT
-	user_id, visit_id, visit_start_time, page_views, cart_adds, purchase,  
-	CASE		
-		WHEN visit_start_time BETWEEN start_date AND end_date
-		THEN campaign_name
-	END AS campaign_name,
-	impression, click
+)
+SELECT DISTINCT 
+	user_id, visit_id, visit_start_time, page_views, cart_adds, purchase,global_cte.campaign_name,impression,click
 FROM
-	global_cte,campaign_cte
+	global_cte
 ORDER BY
 	user_id
-
-
+GO
 
 
