@@ -20,7 +20,7 @@ CREATE TABLE customer_orders (
   "pizza_id" INTEGER,
   "exclusions" VARCHAR(4),
   "extras" VARCHAR(4),
-  "order_time" DATE
+  "order_time" DATETIME
 );
 GO
 INSERT INTO customer_orders

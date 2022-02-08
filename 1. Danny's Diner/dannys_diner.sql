@@ -1,3 +1,15 @@
+------------
+-- Tables --
+------------
+
+SELECT * FROM sales;
+SELECT * FROM menu;
+SELECT * FROM members;
+
+--------------------------
+-- Case Study Questions --
+--------------------------
+
 --1). What is the total amount each customer spent at the restaurant?
 
 SELECT 

@@ -1,12 +1,19 @@
+------------
+-- Tables -- 
+------------
+
 SELECT * FROM regions 
 SELECT * FROM customer_nodes
 SELECT * FROM customer_transactions
 
-----------A. Customer Nodes Exploration----------
+--------------------------------
+-- Customer Nodes Exploration --
+--------------------------------
+
 -- 1. How many unique nodes are there on the Data Bank system?
 
 SELECT 
-	COUNT(DISTINCT customer_id) 
+	COUNT(DISTINCT customer_id) AS total_unique_nodes
 FROM
 	customer_nodes
 
@@ -78,7 +85,7 @@ avg_days_relocate_cte AS
 		customer_id
 )
 SELECT
-	AVG(avg_days_relocate)
+	AVG(avg_days_relocate) AS avg_days_relocation
 FROM
 	avg_days_relocate_cte
 
@@ -112,11 +119,14 @@ FROM
 		region_id,
 		node_id
 
--------B. Customer Transactions-----------
+---------------------------
+-- Customer Transactions --
+---------------------------
+
 -- 1. What is the unique count and total amount for each transaction type?
 
 SELECT
-	COUNT(DISTINCT customer_id)
+	COUNT(DISTINCT customer_id) AS total_unique_txn
 FROM
 	customer_transactions
 
@@ -125,7 +135,7 @@ FROM
 SELECT 
 	customer_id,
 	COUNT(txn_type) AS no_deposit,
-	AVG(txn_amount) 
+	AVG(txn_amount) AS amount
 FROM
 	customer_transactions
 WHERE

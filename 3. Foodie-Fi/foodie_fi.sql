@@ -1,4 +1,14 @@
-------------A. Customer Journey------------------
+------------
+-- Tables --
+------------
+
+ SELECT * FROM plans;
+ SELECT * FROM subscriptions;
+
+----------------------
+-- Customer Journey --
+----------------------
+
 SELECT 
 	s.customer_id,
 	count(plan_id)
@@ -10,7 +20,9 @@ WHERE
 GROUP BY 
 	customer_id
 
-------------B. Data Analysis Questions-------------
+-----------------------------
+-- Data Analysis Questions --
+-----------------------------
 
 -- 1. How many customers has Foodie-Fi ever had?
 
@@ -113,8 +125,6 @@ GROUP BY
 	plan_id
 ORDER BY
 	plan_id
-
---SELECT * FROM plans
 
 -- 7. What is the customer count and percentage breakdown of
 --    all 5 plan_name values at 2020-12-31?

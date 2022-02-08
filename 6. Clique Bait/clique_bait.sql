@@ -1,3 +1,7 @@
+------------
+-- Tables --
+------------
+
 SELECT * FROM event_identifier;
 SELECT * FROM campaign_identifier;
 SELECT * FROM page_hierarchy;

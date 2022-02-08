@@ -1,3 +1,7 @@
+------------
+-- Tables --
+------------
+
 SELECT * FROM sales
 SELECT * FROM product_details
 

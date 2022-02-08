@@ -1,5 +1,5 @@
 ------------------------------
--- [cleanning Date Format]  --
+-- Data Cleansing Steps --
 ------------------------------
 
 ALTER TABLE weekly_sales ALTER column week_date VARCHAR(10)
@@ -28,6 +28,9 @@ UPDATE weekly_sales
 SET week_date= CONVERT(VARCHAR(10), CONVERT(DATE, week_date, 103), 120)
 
 ALTER TABLE weekly_sales ALTER column week_date DATE
+
+SELECT week_date FROM weekly_sales;
+
 ------------------------------
 -- [Add new Column] --
 ------------------------------
@@ -91,6 +94,7 @@ UPDATE weekly_sales
 SET avg_transaction = ROUND( ( CONVERT(FLOAT,sales) / CONVERT(FLOAT,transactions) ),2)
 
 ALTER TABLE weekly_sales ALTER COLUMN sales BIGINT
+
 ----------------------
 -- Data Exploration --
 ----------------------
