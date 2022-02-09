@@ -444,9 +444,13 @@ ORDER BY
 --Meat Lovers - Extra Bacon
 --Meat Lovers - Exclude Cheese, Bacon - Extra Mushroom, Peppers
 
---view--
+--view-
+--GO
+CREATE VIEW pizza_toppingsvw AS select  pizza_id, STRING_AGG(topping_name,',')toppings  FROM vwPizzaRecipe GROUP BY pizza_id
+--GO
+--SELECT * FROM pizza_toppingsvw
 GO
-CREATE VIEW vwExcludeAndExtra AS 
+ALTER VIEW vwExcludeAndExtra AS (
 SELECT 
 	c.order_id,
 	c.pizza_id,
@@ -476,14 +480,24 @@ SELECT
 			),1,1,''
 		) AS extra,
 		(SELECT count(value) FROM string_split(c.extras,',') WHERE c.extras <> '') AS extras_count,
-		c.extras as extras_id
+		c.extras as extras_id,
+	(	SELECT
+			ptvw.toppings
+		FROM	
+			pizza_toppingsvw ptvw
+		WHERE
+			ptvw.pizza_id = c.pizza_id
+			AND
+			(c.exclusions = '' AND c.extras = '')
+			) AS topping_list
 FROM
 	customer_orders c
 	JOIN
 	pizza_names pn
 	ON
 	pn.pizza_id = c.pizza_id 
-
+)
+select * from vwExcludeAndExtra
 GO
 --------QUERY-----------------
 
@@ -537,33 +551,9 @@ ORDER BY
 	order_id
 
 --6).What is the total quantity of each ingredient used in all delivered pizzas sorted by most frequent first?
-SELECT
-	co.order_id,
-	pizza_name,
-	count(co.pizza_id) as pizza_count,
-	SUM(CASE
-		WHEN co.extras <> ''
-		THEN 1
-		ELSE 0
-	END )AS exclusions
-FROM
-	customer_orders co
-	join
-	runner_orders ro
-	ON
-	ro.order_id = co.order_id
-	join
-	pizza_names pn
-	ON
-	pn.pizza_id = co.pizza_id
-WHERE 
-	ro.cancellation IS NULL
-GROUP BY
-	co.order_id,
-	pizza_name
 
-SELECT order_id, (SELECT count(value) FROM string_split(exclusions,',') WHERE exclusions <> '')
-FROM customer_orders
+select DISTINCT topping_name from vwPizzaRecipe
+select * from vwExcludeAndExtra
 
 -------------------------
 -- Pricing and Ratings --
@@ -746,3 +736,7 @@ SELECT
 FROM 
 	cte_Income
 GO
+
+-------
+
+SELECT * FROM pizza_toppingsvw

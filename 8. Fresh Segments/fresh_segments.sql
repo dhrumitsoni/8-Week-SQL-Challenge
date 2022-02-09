@@ -233,25 +233,11 @@ FROM
 -- 3. If we were to remove all interest_id values which are lower than the total_months value we found in the previous question
 -- - how many total data points would we be removing?
 
-WITH cte_interest_months AS (
-	SELECT
-		interest_id,
-		MAX(DISTINCT month_year) AS total_months
-	FROM 
-		interest_metrics
-	WHERE 
-		interest_id IS NOT NULL
-	GROUP BY 
-		interest_id
-)
-
-	SELECT
-		total_months,
-		COUNT(DISTINCT interest_id) AS interest_count
-	FROM 
-		cte_interest_months
-	GROUP BY 
-		total_months
+SELECT DISTINCT
+	_month
+	
+FROM
+	interest_metrics
 
 -- 4. Does this decision make sense to remove these data points from a business perspective? Use an example 
 --    where there are all 14 months present to a removed interest example for your arguments

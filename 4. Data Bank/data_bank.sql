@@ -211,3 +211,5 @@ group by
 ORDER BY
 	customer_id,
 	txn_month
+
+

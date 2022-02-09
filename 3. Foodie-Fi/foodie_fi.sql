@@ -192,7 +192,36 @@ FROM
 
 -- 10. Can you further breakdown this average value into 30 day periods 
 --     (i.e. 0-30 days, 31-60 days etc)
-
+-- Filter results to customers at trial plan = 0
+--WITH trial_plan AS 
+--(SELECT 
+--  customer_id, 
+--  start_date AS trial_date
+--FROM foodie_fi.subscriptions
+--WHERE plan_id = 0
+--),
+---- Filter results to customers at pro annual plan = 3
+--annual_plan AS
+--(SELECT 
+--  customer_id, 
+--  start_date AS annual_date
+--FROM foodie_fi.subscriptions
+--WHERE plan_id = 3
+--),
+---- Sort values above in buckets of 12 with range of 30 days each
+--bins AS 
+--(SELECT 
+--  WIDTH_BUCKET(ap.annual_date - tp.trial_date, 0, 360, 12) AS avg_days_to_upgrade
+--FROM trial_plan tp
+--JOIN annual_plan ap
+--  ON tp.customer_id = ap.customer_id)
+  
+--SELECT 
+--  ((avg_days_to_upgrade - 1) * 30 || ' - ' || (avg_days_to_upgrade) * 30) || ' days' AS breakdown, 
+--  COUNT(*) AS customers
+--FROM bins
+--GROUP BY avg_days_to_upgrade
+--ORDER BY avg_days_to_upgrade;
 
 -- 11. How many customers downgraded from a pro monthly to a basic monthly plan in 2020?
 
