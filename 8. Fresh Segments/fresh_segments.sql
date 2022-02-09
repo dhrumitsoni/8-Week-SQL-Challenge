@@ -257,19 +257,52 @@ FROM
 
 
 -- 2. Which 5 interests had the lowest average ranking value?
-
-
+SELECT TOP 5
+	interest_id,
+	AVG(ranking) AS avg_ranking
+FROM 
+	interest_metrics
+GROUP BY
+	interest_id
+ORDER BY 
+	avg_ranking ASC
 
 -- 3. Which 5 interests had the largest standard deviation in their percentile_ranking value
 
-
+SELECT	TOP 5
+	interest_id,
+	STDEV(percentile_ranking) AS std_deviation
+FROM
+	interest_metrics
+GROUP BY
+	interest_id
+ORDER BY
+	std_deviation DESC;
 
 -- 4. For the 5 interests found in the previous question - what was minimum and maximum percentile_ranking values 
 --   for each interest and its corresponding year_month value? Can you describe what is happening for these 5 interests?
---   For the 5 interests found in the previous question - what was minimum and maximum percentile_ranking values 
---   for each interest and its corresponding year_month value? Can you describe what is happening for these 5 interests?
-
-
+SELECT
+	im.interest_id,
+	MIN(percentile_ranking)AS max_pr,
+	MAX(percentile_ranking) AS min_pr
+FROM	
+	interest_metrics im
+	INNER JOIN
+	(SELECT	TOP 5
+		interest_id,
+		STDEV(percentile_ranking) AS std_deviation
+	FROM
+		interest_metrics
+	GROUP BY
+		interest_id
+	ORDER BY
+		std_deviation DESC) isd
+		ON
+		isd.interest_id = im.interest_id
+GROUP BY
+	im.interest_id
+ORDER BY
+	1;
 
 -- 5. How would you describe our customers in this segment based off their composition and ranking values? 
 --    What sort of products or services should we show to these customers and what should we avoid?
@@ -284,16 +317,111 @@ FROM
 --Average composition can be calculated by dividing the composition column by the index_value column rounded to 2 decimal places.
 
 -- 1. What is the top 10 interests by the average composition for each month?
-
-
+WITH com_rank_cte AS
+(
+SELECT 
+	_month  AS month,
+	interest_id,
+	AVG(composition) AS avg_composition,
+	COUNT(interest_id) AS count,
+	DENSE_RANK()OVER(PARTITION BY _month ORDER BY AVG(composition) DESC ) AS rank
+FROM 
+	interest_metrics
+WHERE 
+	_month IS NOT NULL
+GROUP BY
+	_month,
+	interest_id
+)
+SELECT
+	month,
+	interest_id,
+	count,
+	avg_composition
+FROM
+	com_rank_cte
+WHERE
+	rank BETWEEN 1 AND 10
 -- 2. For all of these top 10 interests - which interest appears the most often?
-
+WITH com_rank_cte AS
+(
+SELECT 
+	_month  AS month,
+	interest_id,
+	AVG(composition) AS avg_composition,
+	COUNT(interest_id) AS count,
+	DENSE_RANK()OVER(PARTITION BY _month ORDER BY AVG(composition) DESC ) AS rank
+FROM 
+	interest_metrics
+WHERE 
+	_month IS NOT NULL
+GROUP BY
+	_month,
+	interest_id
+)
+SELECT
+	interest_id,
+	count
+FROM
+	com_rank_cte
+WHERE
+	(rank BETWEEN 1 AND 10)
+	AND
+	count  = 2
 
 -- 3. What is the average of the average composition for the top 10 interests for each month?
-
+WITH com_rank_cte AS
+(
+SELECT 
+	_month  AS month,
+	interest_id,
+	AVG(composition) AS avg_composition,
+	COUNT(interest_id) AS count,
+	DENSE_RANK()OVER(PARTITION BY _month ORDER BY AVG(composition) DESC ) AS rank
+FROM 
+	interest_metrics
+WHERE 
+	_month IS NOT NULL
+GROUP BY
+	_month,
+	interest_id
+)
+SELECT
+	month,
+	AVG(avg_composition) As avg_of_avg_composition
+FROM
+	com_rank_cte
+WHERE
+	rank BETWEEN 1 AND 10
+GROUP BY
+	month
 
 -- 4. What is the 3 month rolling average of the max average composition value from September 2018 to August 2019 
 --    and include the previous top ranking interests in the same output shown below.
+GO
+WITH avg_com_cte AS (
+SELECT 
+	month_year,
+	interest_id,
+	AVG(composition) AS avg_composition
+FROM
+	interest_metrics
+WHERE
+	month_year BETWEEN '2018-07-01' AND '2019-08-30'
+GROUP BY
+	month_year,
+	interest_id
+)
+--rolling_sum_cte AS(
+SELECT
+	month_year,
+	interest_id,
+	avg_composition,
+	SUM(avg_composition) OVER(PARTITION BY month_year ORDER BY 	avg_composition DESC)
+FROM	
+	avg_com_cte
+)
+
 
 
 -- 5. Provide a possible reason why the max average composition might change from month to month? 
