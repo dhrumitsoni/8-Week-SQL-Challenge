@@ -192,36 +192,49 @@ FROM
 
 -- 10. Can you further breakdown this average value into 30 day periods 
 --     (i.e. 0-30 days, 31-60 days etc)
--- Filter results to customers at trial plan = 0
---WITH trial_plan AS 
---(SELECT 
---  customer_id, 
---  start_date AS trial_date
---FROM foodie_fi.subscriptions
---WHERE plan_id = 0
---),
----- Filter results to customers at pro annual plan = 3
---annual_plan AS
---(SELECT 
---  customer_id, 
---  start_date AS annual_date
---FROM foodie_fi.subscriptions
---WHERE plan_id = 3
---),
----- Sort values above in buckets of 12 with range of 30 days each
---bins AS 
---(SELECT 
---  WIDTH_BUCKET(ap.annual_date - tp.trial_date, 0, 360, 12) AS avg_days_to_upgrade
---FROM trial_plan tp
---JOIN annual_plan ap
---  ON tp.customer_id = ap.customer_id)
-  
---SELECT 
---  ((avg_days_to_upgrade - 1) * 30 || ' - ' || (avg_days_to_upgrade) * 30) || ' days' AS breakdown, 
---  COUNT(*) AS customers
---FROM bins
---GROUP BY avg_days_to_upgrade
---ORDER BY avg_days_to_upgrade;
+WITH tiral_to_annual_cte AS(
+SELECT
+	*
+FROM
+	(SELECT DISTINCT
+	s1.customer_id,
+	DATEDIFF(day,(SELECT start_date FROM subscriptions s2 WHERE s1.customer_id = s2.customer_id AND s2.plan_id = 0),(SELECT start_date FROM subscriptions s2 WHERE s1.customer_id = s2.customer_id AND s2.plan_id = 3)) AS tiral_to_annual
+FROM 
+	subscriptions s1) AS upgrade
+WHERE
+	tiral_to_annual IS NOT NULL
+),
+breakdown_cte AS(
+SELECT
+	'customer' AS breakdown,
+	count(CASE WHEN tiral_to_annual>= 1 AND tiral_to_annual <= 30 THEN 1 END) AS [001 - 030],
+	count(CASE WHEN tiral_to_annual>= 31 AND tiral_to_annual <= 60 THEN 1 END) AS [031 - 060],
+	count(CASE WHEN tiral_to_annual>= 61 AND tiral_to_annual <= 90 THEN 1 END) AS [061 - 090],
+	count(CASE WHEN tiral_to_annual>= 91 AND tiral_to_annual <= 120 THEN 1 END) AS [091 - 120],
+	count(CASE WHEN tiral_to_annual>= 121 AND tiral_to_annual <= 150 THEN 1 END) AS [121 - 150],
+	count(CASE WHEN tiral_to_annual>= 151 AND tiral_to_annual <= 180 THEN 1 END) AS [151 - 180],
+	count(CASE WHEN tiral_to_annual>= 181 AND tiral_to_annual <= 210 THEN 1 END) AS [181 - 210],
+	count(CASE WHEN tiral_to_annual>= 211 AND tiral_to_annual <= 240 THEN 1 END) AS [211 - 240],
+	count(CASE WHEN tiral_to_annual>= 241 AND tiral_to_annual <= 270 THEN 1 END) AS [241 - 270],
+	count(CASE WHEN tiral_to_annual>= 271 AND tiral_to_annual <= 300 THEN 1 END) AS [271 - 300],
+	count(CASE WHEN tiral_to_annual>= 301 AND tiral_to_annual <= 330 THEN 1 END) AS [301 - 330],
+	count(CASE WHEN tiral_to_annual>= 331 AND tiral_to_annual <= 360 THEN 1 END) AS [331 - 360]
+FROM	
+	tiral_to_annual_cte
+),
+pivot_cte AS(
+SELECT * 
+FROM breakdown_cte 
+UNPIVOT(
+	customers
+	FOR bins IN ([001 - 030], [031 - 060], [061 - 090], [091 - 120], [121 - 150], [151 - 180], [181 - 210], [211 - 240], [241 - 270], [271 - 300], [301 - 330], [331 - 360])
+)
+AS unpvt
+)
+SELECT 
+	bins AS day_range,
+	customers AS customer_count
+FROM pivot_cte
 
 -- 11. How many customers downgraded from a pro monthly to a basic monthly plan in 2020?
 

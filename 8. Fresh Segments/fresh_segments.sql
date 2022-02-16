@@ -233,11 +233,6 @@ FROM
 -- 3. If we were to remove all interest_id values which are lower than the total_months value we found in the previous question
 -- - how many total data points would we be removing?
 
-SELECT DISTINCT
-	_month
-	
-FROM
-	interest_metrics
 
 -- 4. Does this decision make sense to remove these data points from a business perspective? Use an example 
 --    where there are all 14 months present to a removed interest example for your arguments
@@ -412,16 +407,14 @@ GROUP BY
 	month_year,
 	interest_id
 )
---rolling_sum_cte AS(
 SELECT
 	month_year,
 	interest_id,
 	avg_composition,
-	SUM(avg_composition) OVER(PARTITION BY month_year ORDER BY 	avg_composition DESC)
+	SUM(avg_composition) OVER(PARTITION BY month_year ORDER BY 	avg_composition DESC) AS rolling_sum,
+	DENSE_RANK() OVER(ORDER BY month_year) as ranking
 FROM	
 	avg_com_cte
-)
-
 
 
 -- 5. Provide a possible reason why the max average composition might change from month to month? 

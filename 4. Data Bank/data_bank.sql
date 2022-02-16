@@ -101,11 +101,11 @@ SELECT
 	LEAD(start_date,1) OVER(PARTITION BY customer_id ORDER BY start_date)  next_date
 FROM
 	customer_nodes
-)
+),
+reloc_cte AS
+(
 	SELECT
-		customer_id,
 		region_id,
-		node_id,
 		SUM(DATEDIFF(DAY,start_date,next_date)) diff_date
 	FROM
 		next_date_cte
@@ -115,9 +115,11 @@ FROM
 		region_id,
 		node_id,
 		customer_id
-	ORDER BY
-		region_id,
-		node_id
+)
+SELECT DISTINCT
+	*,
+	CAST (CAST((PERCENT_RANK() OVER(PARTITION BY region_id ORDER BY diff_date)) AS DECIMAL(4,2))*100 AS INT)AS percentile
+FROM reloc_cte
 
 ---------------------------
 -- Customer Transactions --
